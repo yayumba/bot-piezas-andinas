@@ -1,0 +1,209 @@
+{
+  "name": "Pruebas Bot Piezas Andinas",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a06f91b4-a8a3-4529-915d-dc2233a7bb21",
+      "name": "Iniciar pruebas",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const casos = [\n  ['Necesito 10 rodamientos 6205 para Medellin', 'busqueda', true],\n  ['Tienen correa A-45?', 'busqueda', true],\n  ['Busco un retenedor 30x52x7', 'busqueda', true],\n  ['cuanto vale la chumacera UCP205', 'busqueda', true],\n  ['me sirve un eje de acero de 25 mm, tienen?', 'busqueda', true],\n  ['Tienen rodamiento 6305?', 'busqueda', false],\n  ['necesito un eje de acero de 40 mm', 'busqueda', false],\n  ['Busco rodamiento 6312', 'busqueda', false],\n  ['Hay correa B-60?', 'busqueda', false],\n  ['quiero cotizar un pinon para cadena 40 de 15 dientes', 'busqueda', false],\n  ['El rodamiento que me vendieron llego roto', 'reclamo', null],\n  ['Pedi una correa hace una semana y no ha llegado, que pasa', 'reclamo', null],\n  ['No me quieren hacer valida la garantia, estoy molesto', 'reclamo', null],\n  ['me llego un retenedor de otra medida a la que pedi', 'reclamo', null],\n  ['Que diferencia hay entre un rodamiento 6205 y un 6305?', 'consulta_tecnica', null],\n  ['Que tolerancia tiene el eje de 30 mm?', 'consulta_tecnica', null],\n  ['Cada cuanto se debe lubricar una chumacera?', 'consulta_tecnica', null],\n  ['hola', 'otro', null],\n  ['Cual es el horario de atencion?', 'otro', null],\n  ['gracias, muy amable', 'otro', null],\n  ['Tienen rodamiento 6208?', 'busqueda', true],\n  ['necesito una chumacera UCP206', 'busqueda', false],\n  ['Busco cadena de rodillos 50', 'busqueda', false],\n  ['cuantos acoples de mandibula L-100 tienen', 'busqueda', true],\n  ['quiero 5 kilos de grasa EP2 para rodamientos', 'busqueda', true],\n  ['tienen polea en V de 2 canales B de 6 pulgadas?', 'busqueda', false],\n  ['Busco rodamiento 6209', 'busqueda', false],\n  ['me sirve un buje de bronce 25x30x25', 'busqueda', true],\n  ['Compre un acople y vino sin la goma', 'reclamo', null],\n  ['Que grasa recomiendan para alta temperatura?', 'consulta_tecnica', null]\n];\nreturn casos.map(([mensaje, intencion, disponible]) => ({ json: { mensaje, intencion, disponible } }));"
+      },
+      "id": "ccbfc575-0923-452e-ae41-1455bb8b1183",
+      "name": "Casos de prueba",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "claude-haiku-4-5-20251001"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres el asistente de atencion al cliente de \"Piezas Mecanicas Andinas\", empresa ficticia de piezas mecanicas en Colombia. Horario: lunes a viernes, 8:00 a 17:00. Las cotizaciones se responden en maximo 24 horas habiles. Garantia: 30 dias por defectos de fabricacion.\n\nCATALOGO (referencia | existencias):\n{{ $('Armar catálogo').first().json.texto }}\n\nTu tarea: interpretar el mensaje del cliente, aunque no use palabras como \"cotizacion\", y responder SOLO con un JSON valido, sin texto antes ni despues y sin bloques de codigo, con estas claves:\n- \"intencion\": \"busqueda\" (pregunta por una pieza o quiere cotizar), \"reclamo\", \"consulta_tecnica\" u \"otro\".\n- \"pieza\": la pieza que menciona, normalizada en minuscula (por ejemplo \"rodamiento 6305\"), o null si no menciona ninguna.\n- \"referencia\": si la pieza que pide el cliente esta en el CATALOGO, copia exactamente su referencia tal como aparece ahi (por ejemplo \"Rodamiento 6305\"). Si no esta en el catalogo, null. Referencias parecidas no cuentan: 6312 no es 6305 ni 6205.\n- \"disponible\": true solo si esa referencia exacta tiene existencias mayores a 0; false si tiene 0 o no esta en el catalogo; null si no aplica.\n- \"respuesta\": el texto para el cliente.\n\nReglas para \"respuesta\":\n- Espanol, trato de \"usted\", tono cordial y profesional, maximo 5 lineas, sin signos de exclamacion y sin saludos como \"buenos dias\", \"buen dia\" o \"buenas tardes\".\n- Para saltos de linea usa \\n dentro del texto.\n- Si es busqueda y hay existencias: confirma que la tenemos y pide cantidad, ciudad de entrega y fecha requerida.\n- Si es busqueda y no hay existencias: dile que por ahora no la tenemos, que dejamos registrada su solicitud y que lo contactaremos si llega. No prometas fechas ni precios.\n- Si es reclamo: lamente el inconveniente, pida numero de pedido y fotos, y diga que un asesor lo contactara. No prometas reembolsos ni reposiciones.\n- Si es consulta tecnica: diga que un tecnico confirmara la informacion exacta. No inventes tolerancias ni medidas.\n- Si es otro o no se entiende: pida amablemente que cuente que pieza busca o en que le podemos ayudar.\n- No inventes precios, plazos, existencias ni datos que no esten arriba.\n\nMensaje del cliente: {{ $json.mensaje }}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 500
+        }
+      },
+      "id": "5f81f5d3-69bf-453b-ba2a-4d5779c2bd2e",
+      "name": "Claude interpreta",
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        864,
+        -208
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const casos = $('Casos de prueba').all();\nconst catalogo = $('Armar catálogo').first().json.items;\nconst resp = $input.all();\nconst norm = s => String(s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/\\s+/g, ' ').trim();\nlet okInt = 0, okDisp = 0, okIA = 0, nDisp = 0, corregidos = 0;\nconst detalle = [];\nresp.forEach((r, i) => {\n  const c = casos[i].json;\n  let d;\n  try { d = JSON.parse(r.json.content[0].text.replace(/```json|```/g, '').trim()); }\n  catch (e) { d = { intencion: 'error_json', referencia: null, disponible: null, respuesta: '' }; }\n  const okI = d.intencion === c.intencion;\n  if (okI) okInt++;\n  let okD = null, dispFinal = d.disponible, corregido = false;\n  if (c.intencion === 'busqueda') {\n    nDisp++;\n    if (d.disponible === c.disponible) okIA++;\n    const item = d.referencia ? catalogo.find(x => norm(x.referencia) === norm(d.referencia)) : null;\n    dispFinal = !!(item && item.existencias > 0);\n    corregido = dispFinal !== d.disponible;\n    if (corregido) corregidos++;\n    okD = dispFinal === c.disponible;\n    if (okD) okDisp++;\n  }\n  detalle.push({ n: i + 1, mensaje: c.mensaje, esperado: c.intencion, obtenido: d.intencion, referencia: d.referencia, disp_esperado: c.disponible, disp_ia: d.disponible, disp_final: dispFinal, corregido, correcto: okI && okD !== false, respuesta: d.respuesta });\n});\nreturn [{ json: { total: resp.length, aciertos_intencion: okInt, pct_intencion: Math.round(okInt / resp.length * 100), casos_disponibilidad: nDisp, aciertos_disponibilidad_final: okDisp, pct_disponibilidad_final: Math.round(okDisp / nDisp * 100), aciertos_disponibilidad_solo_ia: okIA, correcciones_del_codigo: corregidos, fallos: detalle.filter(x => !x.correcto), detalle } }];"
+      },
+      "id": "c83fa20a-ecb7-4c1f-8170-fb5210ff9a5b",
+      "name": "Evaluar resultados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "cachedResultName": "catalogo",
+          "mode": "list",
+          "value": "dif49TPkCEX6p3nl"
+        },
+        "returnAll": true
+      },
+      "id": "c950da8a-ee31-4244-83af-ce20ffce68dd",
+      "name": "Leer catálogo",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map(i => ({ referencia: i.json.referencia, existencias: Number(i.json.existencias) }));\nconst texto = items.map(i => `- ${i.referencia} | ${i.existencias}`).join('\\n');\nreturn [{ json: { texto, items } }];"
+      },
+      "id": "2006c1f0-376c-4162-b1ed-0285bc30f3a7",
+      "name": "Armar catálogo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "ID_DEL_GRUPO_INTERNO",
+        "text": "=🧪 Pruebas del bot completadas\nIntención correcta: {{ $json.aciertos_intencion }}/{{ $json.total }} ({{ $json.pct_intencion }} %)\nDisponibilidad final: {{ $json.aciertos_disponibilidad_final }}/{{ $json.casos_disponibilidad }} ({{ $json.pct_disponibilidad_final }} %)\nDisponibilidad solo IA: {{ $json.aciertos_disponibilidad_solo_ia }}/{{ $json.casos_disponibilidad }}\nCorrecciones del código: {{ $json.correcciones_del_codigo }}\nFallos: {{ $json.fallos.length }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "name": "Enviar resumen al grupo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1424,
+        -208
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Casos de prueba": {
+      "main": [
+        [
+          {
+            "node": "Claude interpreta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude interpreta": {
+      "main": [
+        [
+          {
+            "node": "Evaluar resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Iniciar pruebas": {
+      "main": [
+        [
+          {
+            "node": "Leer catálogo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer catálogo": {
+      "main": [
+        [
+          {
+            "node": "Armar catálogo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar catálogo": {
+      "main": [
+        [
+          {
+            "node": "Casos de prueba",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar resultados": {
+      "main": [
+        [
+          {
+            "node": "Enviar resumen al grupo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

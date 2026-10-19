@@ -1,0 +1,786 @@
+{
+  "name": "Bot Piezas Andinas",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -544,
+        -128
+      ],
+      "id": "3b9a59a9-431b-4f3a-8f1a-b624e1e357d3",
+      "name": "Telegram Trigger",
+      "webhookId": "944f610a-92e3-4e77-9b58-667ad1f6ed0a",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "312166b9-d4a7-49cf-94db-e6295ec12395",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "/start",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        112,
+        -160
+      ],
+      "id": "dd761ec7-8bf3-4ae3-98cb-dccd7c667f5e",
+      "name": "¿No es /start?"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Hola 👋 Soy el asistente de Piezas Mecánicas Andinas. Cuéntenos qué pieza busca o en qué le podemos ayudar.\n\nAl escribirnos, usted autoriza el uso de su nombre y sus mensajes solo para atender su solicitud, conforme a la Ley 1581 de 2012.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        16
+      ],
+      "id": "68868782-5968-4a4f-abf3-1ab7925878fb",
+      "name": "Bienvenida",
+      "webhookId": "b70cbd60-c801-4d41-8d2b-585b44b602c5",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "claude-haiku-4-5-20251001"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres el asistente de atencion al cliente de \"Piezas Mecanicas Andinas\", empresa ficticia de piezas mecanicas en Colombia. Horario: lunes a viernes, 8:00 a 17:00. Las cotizaciones se responden en maximo 24 horas habiles. Garantia: 30 dias por defectos de fabricacion.\n\nCATALOGO (referencia | existencias):\n{{ $('Armar catálogo').first().json.texto }}\n\nTu tarea: interpretar el mensaje del cliente, aunque no use palabras como \"cotizacion\", y responder SOLO con un JSON valido, sin texto antes ni despues y sin bloques de codigo, con estas claves:\n- \"intencion\": \"busqueda\" (pregunta por una pieza o quiere cotizar), \"reclamo\", \"consulta_tecnica\" u \"otro\".\n- \"pieza\": la pieza que menciona, normalizada en minuscula (por ejemplo \"rodamiento 6305\"), o null si no menciona ninguna.\n- \"referencia\": si la pieza que pide el cliente esta en el CATALOGO, copia exactamente su referencia tal como aparece ahi (por ejemplo \"Rodamiento 6305\"). Si no esta en el catalogo, null. Referencias parecidas no cuentan: 6312 no es 6305 ni 6205.\n- \"disponible\": true solo si esa referencia exacta tiene existencias mayores a 0; false si tiene 0 o no esta en el catalogo; null si no aplica.\n- \"respuesta\": el texto para el cliente.\n\nReglas para \"respuesta\":\n- Espanol, trato de \"usted\", tono cordial y profesional, maximo 5 lineas, sin signos de exclamacion y sin saludos como \"buenos dias\", \"buen dia\" o \"buenas tardes\".\n- Para saltos de linea usa \\n dentro del texto.\n- Si es busqueda y hay existencias: confirma que la tenemos y pide cantidad, ciudad de entrega y fecha requerida.\n- Si es busqueda y no hay existencias: dile que por ahora no la tenemos, que dejamos registrada su solicitud y que lo contactaremos si llega. No prometas fechas ni precios.\n- Si es reclamo: lamente el inconveniente, pida numero de pedido y fotos, y diga que un asesor lo contactara. No prometas reembolsos ni reposiciones.\n- Si es consulta tecnica: diga que un tecnico confirmara la informacion exacta. No inventes tolerancias ni medidas.\n- Si es otro o no se entiende: pida amablemente que cuente que pieza busca o en que le podemos ayudar.\n- No inventes precios, plazos, existencias ni datos que no esten arriba.\n\nMensaje del cliente: {{ $('Telegram Trigger').item.json.message.text }}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 500
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -176
+      ],
+      "id": "b97bb29e-a86c-4035-a4d1-ae72c68e6b16",
+      "name": "Claude interpreta",
+      "credentials": {
+        "anthropicApi": {
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.content[0].text;\nconst limpio = raw.replace(/```json|```/g, '').trim();\n\nlet datos;\ntry {\n  datos = JSON.parse(limpio);\n} catch (e) {\n  datos = {\n    intencion: 'otro',\n    pieza: null,\n    referencia: null,\n    disponible: null,\n    respuesta: 'Disculpe, no logré entender su mensaje. ¿Podría contarme qué pieza busca o en qué le podemos ayudar?'\n  };\n}\n\n// Normaliza texto: sin tildes, minúsculas y sin espacios extra\nconst norm = s => String(s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/\\s+/g, ' ').trim();\n\n// La IA interpreta, el código decide: verifica existencias contra la tabla catalogo\nconst catalogo = $('Armar catálogo').first().json.items;\nconst item = datos.referencia ? catalogo.find(c => norm(c.referencia) === norm(datos.referencia)) : null;\nlet corregido = false;\n\nif (datos.intencion === 'busqueda') {\n  const disponible = !!(item && item.existencias > 0);\n  if (disponible !== datos.disponible) {\n    corregido = true;\n    datos.respuesta = disponible\n      ? `Contamos con ${item.referencia} en existencia. Por favor indíquenos la cantidad, la ciudad de entrega y la fecha en que la necesita.`\n      : `Por ahora no tenemos ${item ? item.referencia : (datos.pieza || 'esa pieza')}. Dejamos registrada su solicitud y lo contactaremos si llega.`;\n  }\n  datos.disponible = disponible;\n}\n\n// Quita saludos no permitidos al inicio de la respuesta\nlet respuesta = String(datos.respuesta || '').replace(/^\\s*(buen(os)? d[ií]as?|buenas tardes|buenas noches)[.,]?\\s*/i, '');\nrespuesta = respuesta.charAt(0).toUpperCase() + respuesta.slice(1);\n\n// Para la tabla pendientes se usa la referencia del catálogo si existe\nconst pieza = item ? norm(item.referencia) : (datos.pieza ? norm(datos.pieza) : null);\n\nreturn {\n  json: {\n    ...datos,\n    respuesta,\n    pieza,\n    referencia_catalogo: item ? item.referencia : null,\n    existencias: item ? item.existencias : null,\n    corregido,\n    chat_id: String($('Telegram Trigger').item.json.message.chat.id),\n    mensaje: $('Telegram Trigger').item.json.message.text\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -176
+      ],
+      "id": "7ede1e4e-2d74-4ed6-b4d7-f1073bfd7b0c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0b569e17-c89d-4464-87f6-d8568e458f03",
+              "leftValue": "={{ $json.intencion === 'busqueda' && $json.disponible === false }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1136,
+        -176
+      ],
+      "id": "d1fdaa81-4820-49ae-8e3b-726c92c40c19",
+      "name": "¿Búsqueda sin existencias?"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "pLBiNChTLy9dcYqd",
+          "mode": "list",
+          "cachedResultName": "pendientes",
+          "cachedResultUrl": "/projects/PmkPPHBVstFJM2mS/datatables/pLBiNChTLy9dcYqd"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Code in JavaScript').item.json.chat_id }}",
+            "pieza": "={{ $('Code in JavaScript').item.json.pieza }}",
+            "mensaje": "={{ $('Telegram Trigger').item.json.message.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "pieza",
+              "displayName": "pieza",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "mensaje",
+              "displayName": "mensaje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        -176
+      ],
+      "id": "1803e23c-57e5-4cc0-9e77-815b4cd8a330",
+      "name": "Guardar pendiente"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2842f072-71ee-4fbe-8b60-3ad360a8e1d7",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1520,
+        -192
+      ],
+      "id": "23c35452-184c-49b2-aedb-ec29c99df6f9",
+      "name": "¿Ya registrada?"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "pLBiNChTLy9dcYqd",
+          "mode": "list",
+          "cachedResultName": "pendientes",
+          "cachedResultUrl": "/projects/PmkPPHBVstFJM2mS/datatables/pLBiNChTLy9dcYqd"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "pieza",
+              "keyValue": "={{ $('Code in JavaScript').item.json.pieza }}"
+            },
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{ $('Code in JavaScript').item.json.chat_id }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1328,
+        -192
+      ],
+      "id": "8d17842c-62d0-44dc-9e99-9b5044dde7c4",
+      "name": "Buscar pendiente",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7d078600-7dcc-4862-930d-b8a3d5acc88f",
+              "leftValue": "={{ $json.message.chat.type }}",
+              "rightValue": "private",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -320,
+        -128
+      ],
+      "id": "7f37dd5f-58ba-48ee-a90e-7683559d8cf8",
+      "name": "¿Chat privado?"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.respuesta }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        0
+      ],
+      "id": "215c0561-3d73-4cf6-b0b0-fd0ceedadcad",
+      "name": "Cliente - respuesta",
+      "webhookId": "2140a77a-7cde-4282-8012-ec08ce8fcf94",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Su solicitud de {{ $('Code in JavaScript').item.json.pieza }} ya está registrada. Seguimos trabajando para conseguir esa pieza.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1760,
+        -336
+      ],
+      "id": "dc049919-520b-4fc1-9195-75dde004d707",
+      "name": "Cliente - ya registrada",
+      "webhookId": "4c1f630c-9b66-4007-9062-a8a94428963b",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('Code in JavaScript').item.json.respuesta }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1968,
+        -176
+      ],
+      "id": "c6bcd9a4-6c2e-45f8-9f37-884c49f26090",
+      "name": "Cliente - pendiente",
+      "webhookId": "edc7ed93-2adb-4864-bb3e-d3aea074d964",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "ID_DEL_GRUPO_INTERNO",
+        "text": "=⚠️ Reclamo nuevo\nCliente: {{ $('Telegram Trigger').item.json.message.from.first_name }}\nChat: {{ $('Code in JavaScript').item.json.chat_id }}\nMensaje: {{ $('Code in JavaScript').item.json.mensaje }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1760,
+        -16
+      ],
+      "id": "2684930c-2083-4617-990c-9875bb0ee7ba",
+      "name": "Aviso - reclamo",
+      "webhookId": "f924bbbd-f8a4-4204-afa5-b1fae19a12be",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "ID_DEL_GRUPO_INTERNO",
+        "text": "=🔔 Pieza pendiente nueva\nCliente: {{ $('Telegram Trigger').item.json.message.from.first_name }}\nChat: {{ $('Code in JavaScript').item.json.chat_id }}\nPieza: {{ $('Code in JavaScript').item.json.pieza }}\nMensaje: {{ $('Code in JavaScript').item.json.mensaje }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2160,
+        -176
+      ],
+      "id": "f16c238b-c9ce-4f83-89b4-16b7241961c2",
+      "name": "Aviso - pendiente",
+      "webhookId": "e576312e-fd3b-4ca6-aa00-d62da3b2f8ec",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "a1c3e2f0-1b2c-4d5e-8f90-reclamo00001",
+              "leftValue": "={{ $('Code in JavaScript').item.json.intencion }}",
+              "operator": {
+                "name": "filter.operator.equals",
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "reclamo"
+            }
+          ],
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          }
+        },
+        "options": {}
+      },
+      "id": "a830562d-7ec0-4c8b-a1a5-ea31fac4631f",
+      "name": "¿Es reclamo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "b2d4f6a8-2c3d-4e5f-9a01-texto0000001",
+              "leftValue": "={{ $json.message.text }}",
+              "operator": {
+                "operation": "exists",
+                "singleValue": true,
+                "type": "string"
+              },
+              "rightValue": ""
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          }
+        },
+        "options": {}
+      },
+      "id": "9d0fa177-aed2-493f-8258-755382df8694",
+      "name": "¿Es texto?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -80,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Por ahora solo puedo leer mensajes de texto. Por favor escríbanos qué pieza busca o en qué le podemos ayudar.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "d2f885ff-0ac2-4d9c-812e-a7af3c59219f",
+      "name": "Solo texto",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        48,
+        32
+      ],
+      "webhookId": "859ebe6f-9afd-4c09-a02c-df0e00818691",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "cachedResultName": "catalogo",
+          "mode": "list",
+          "value": "dif49TPkCEX6p3nl"
+        },
+        "returnAll": true
+      },
+      "id": "ceb1d709-d95c-4bfb-b412-14f69c452cde",
+      "name": "Leer catálogo",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Junta las filas de la tabla catalogo en un solo item\nconst items = $input.all().map(i => ({ referencia: i.json.referencia, existencias: Number(i.json.existencias) }));\nconst texto = items.map(i => `- ${i.referencia} | ${i.existencias}`).join('\\n');\nreturn [{ json: { texto, items } }];"
+      },
+      "id": "e97e32a7-ccf4-4a97-a34c-7c4d86c0a446",
+      "name": "Armar catálogo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -176
+      ]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "¿Chat privado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bienvenida": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "¿Búsqueda sin existencias?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es reclamo?": {
+      "main": [
+        [
+          {
+            "node": "Aviso - reclamo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es texto?": {
+      "main": [
+        [
+          {
+            "node": "¿No es /start?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Solo texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cliente - ya registrada": {
+      "main": [
+        []
+      ]
+    },
+    "¿Chat privado?": {
+      "main": [
+        [
+          {
+            "node": "¿Es texto?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿No es /start?": {
+      "main": [
+        [
+          {
+            "node": "Leer catálogo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bienvenida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude interpreta": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Búsqueda sin existencias?": {
+      "main": [
+        [
+          {
+            "node": "Buscar pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cliente - respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Ya registrada?": {
+      "main": [
+        [
+          {
+            "node": "Cliente - ya registrada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Guardar pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cliente - respuesta": {
+      "main": [
+        [
+          {
+            "node": "¿Es reclamo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cliente - pendiente": {
+      "main": [
+        [
+          {
+            "node": "Aviso - pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar pendiente": {
+      "main": [
+        [
+          {
+            "node": "Cliente - pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar pendiente": {
+      "main": [
+        [
+          {
+            "node": "¿Ya registrada?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer catálogo": {
+      "main": [
+        [
+          {
+            "node": "Armar catálogo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar catálogo": {
+      "main": [
+        [
+          {
+            "node": "Claude interpreta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

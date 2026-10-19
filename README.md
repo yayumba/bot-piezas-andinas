@@ -18,6 +18,10 @@ Construido con **n8n (autoalojado en Docker)**, **Claude Haiku 4.5 (API de Anthr
 | Foto, audio o sticker | Pide que escriba el mensaje en texto |
 | Mensajes en el grupo interno | Los ignora |
 
+## Así se ve en n8n
+
+![Flujo del bot en n8n](capturas/flujo-bot.png)
+
 ## Arquitectura
 
 ```mermaid
@@ -77,6 +81,10 @@ Set de 30 mensajes etiquetados a mano (búsquedas con y sin existencias, referen
 | Tiempo total de las 30 pruebas | ~55 s (~1,8 s por mensaje) |
 
 Las 2 correcciones fueron referencias que no existen en el catálogo (6312 y 6209): la IA no marcó la disponibilidad y el código la fijó en "no disponible". Esto demuestra el valor de que el código, y no la IA, decida las existencias.
+
+Workflow de evaluación (al terminar, envía el resumen al grupo interno de Telegram):
+
+![Workflow de pruebas en n8n](capturas/flujo-pruebas.png)
 
 ## Estructura del repositorio
 
