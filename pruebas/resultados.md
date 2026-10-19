@@ -29,5 +29,5 @@ En los casos 8 y 27 (referencias inexistentes), la IA no marcó la disponibilida
 ## Limitaciones
 
 - Los mensajes fueron escritos por el autor, no por clientes reales.
-- La muestra es pequeña (30 casos) y los resultados corresponden a una ejecución; el modelo puede variar entre ejecuciones.
+- La muestra es pequeña (30 casos). Se ejecutó 2 veces con el mismo resultado, pero el modelo puede variar entre ejecuciones.
 - Siguiente paso: repetir la evaluación varias veces y agregar casos con errores de ortografía y mensajes con varias piezas.
