@@ -18,6 +18,12 @@ Construido con **n8n (autoalojado en Docker)**, **Claude Haiku 4.5 (API de Anthr
 | Foto, audio o sticker | Pide que escriba el mensaje en texto |
 | Mensajes en el grupo interno | Los ignora |
 
+## El bot funcionando
+
+| Chat con el cliente | Avisos al grupo interno |
+|---|---|
+| ![Chat del cliente con el bot](capturas/chat-cliente.png) | ![Avisos en el grupo interno](capturas/avisos-grupo.png) |
+
 ## Así se ve en n8n
 
 ![Flujo del bot en n8n](capturas/flujo-bot.png)
