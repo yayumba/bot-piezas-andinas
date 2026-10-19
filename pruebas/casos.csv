@@ -1,0 +1,31 @@
+n,mensaje,intencion_esperada,intencion_obtenida,disponible_esperado,disponible_segun_ia,disponible_final,corregido_por_codigo,correcto
+1,Necesito 10 rodamientos 6205 para Medellin,busqueda,busqueda,true,true,true,no,si
+2,Tienen correa A-45?,busqueda,busqueda,true,true,true,no,si
+3,Busco un retenedor 30x52x7,busqueda,busqueda,true,true,true,no,si
+4,cuanto vale la chumacera UCP205,busqueda,busqueda,true,true,true,no,si
+5,"me sirve un eje de acero de 25 mm, tienen?",busqueda,busqueda,true,true,true,no,si
+6,Tienen rodamiento 6305?,busqueda,busqueda,false,false,false,no,si
+7,necesito un eje de acero de 40 mm,busqueda,busqueda,false,false,false,no,si
+8,Busco rodamiento 6312,busqueda,busqueda,false,null,false,si,si
+9,Hay correa B-60?,busqueda,busqueda,false,false,false,no,si
+10,quiero cotizar un pinon para cadena 40 de 15 dientes,busqueda,busqueda,false,false,false,no,si
+11,El rodamiento que me vendieron llego roto,reclamo,reclamo,,,,no,si
+12,"Pedi una correa hace una semana y no ha llegado, que pasa",reclamo,reclamo,,,,no,si
+13,"No me quieren hacer valida la garantia, estoy molesto",reclamo,reclamo,,,,no,si
+14,me llego un retenedor de otra medida a la que pedi,reclamo,reclamo,,,,no,si
+15,Que diferencia hay entre un rodamiento 6205 y un 6305?,consulta_tecnica,consulta_tecnica,,,,no,si
+16,Que tolerancia tiene el eje de 30 mm?,consulta_tecnica,consulta_tecnica,,,,no,si
+17,Cada cuanto se debe lubricar una chumacera?,consulta_tecnica,consulta_tecnica,,,,no,si
+18,hola,otro,otro,,,,no,si
+19,Cual es el horario de atencion?,otro,otro,,,,no,si
+20,"gracias, muy amable",otro,otro,,,,no,si
+21,Tienen rodamiento 6208?,busqueda,busqueda,true,true,true,no,si
+22,necesito una chumacera UCP206,busqueda,busqueda,false,false,false,no,si
+23,Busco cadena de rodillos 50,busqueda,busqueda,false,false,false,no,si
+24,cuantos acoples de mandibula L-100 tienen,busqueda,busqueda,true,true,true,no,si
+25,quiero 5 kilos de grasa EP2 para rodamientos,busqueda,busqueda,true,true,true,no,si
+26,tienen polea en V de 2 canales B de 6 pulgadas?,busqueda,busqueda,false,false,false,no,si
+27,Busco rodamiento 6209,busqueda,busqueda,false,null,false,si,si
+28,me sirve un buje de bronce 25x30x25,busqueda,busqueda,true,true,true,no,si
+29,Compre un acople y vino sin la goma,reclamo,reclamo,,,,no,si
+30,Que grasa recomiendan para alta temperatura?,consulta_tecnica,consulta_tecnica,,,,no,si
